@@ -18,7 +18,7 @@ export default function ListeAvisComponent() {
   const [username, setUsername] = useState("");
 
   // Formulaire de création d'un avis
-  const [guestName, setGuestName] = useState(""); // Pour les utilisateurs non connectés
+  const [guestName, setGuestName] = useState(""); 
   const [rating, setRating] = useState(5);
   const [description, setDescription] = useState("");
   
@@ -82,19 +82,14 @@ export default function ListeAvisComponent() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // 🛑 VÉRIFICATION HONEYPOT ANTI-SPAM
-    // Si ce champ caché est rempli, c'est un bot automatisé.
     if (honeypot.trim() !== "") {
       console.warn("Spam détecté via le honeypot !");
-      // On réinitialise et on simule un succès pour tromper le bot sans enregistrer
       setShowForm(false);
       setDescription("");
       return;
     }
 
     const token = localStorage.getItem("jwt") || localStorage.getItem("token");
-
-    // Nom affiché : soit le username de la session, soit la saisie de l'invité, soit "Visiteur" par défaut
     const authorName = isConnected
       ? username
       : guestName.trim() || "Visiteur anonyme";
@@ -111,7 +106,7 @@ export default function ListeAvisComponent() {
           rating: Number(rating),
           description,
           date: new Date(),
-          website: honeypot, // Transmis au backend si nécessaire
+          website: honeypot,
         }),
       });
 
@@ -119,7 +114,6 @@ export default function ListeAvisComponent() {
         setDescription("");
         setGuestName("");
         setShowForm(false);
-        // On recharge la liste en refaisant un fetch
         const res = await fetch(`${API_BASE_URL}/avis`);
         if (res.ok) {
           const data = await res.json();
@@ -209,7 +203,6 @@ export default function ListeAvisComponent() {
             </p>
           </div>
 
-          {/* Le bouton d'ouverture est désormais toujours accessible */}
           <div className="mt-6 sm:mt-0">
             <button
               onClick={() => setShowForm(!showForm)}
@@ -229,8 +222,6 @@ export default function ListeAvisComponent() {
             </h3>
             
             <form onSubmit={handleSubmit} className="space-y-4">
-
-              {/* 🛑 PIÈGE HONEYPOT ANTI-SPAM (invisible aux humains) */}
               <div className="hidden" aria-hidden="true">
                 <label htmlFor="website">Ne pas remplir ce champ :</label>
                 <input
@@ -310,111 +301,88 @@ export default function ListeAvisComponent() {
         )}
 
         {/* --- GRILLE DES AVIS EXISTANTS --- */}
-{loading ? (
-  <div className="text-center py-12">
-    <p className="text-gray-500 font-medium animate-pulse">
-      Chargement des avis...
-    </p>
-  </div>
-) : avis.length === 0 ? (
-  <div className="text-center py-12 bg-white rounded-2xl border border-gray-200">
-    <p className="text-gray-500 italic">
-      Aucun avis n'a encore été publié. Soyez le premier !
-    </p>
-  </div>
-) : (
-  <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-    {avis.map((item) => {
-      const currentId = item.id || item._id;
-      const isEditing = editingId === currentId;
+        {loading ? (
+          <div className="text-center py-12">
+            <p className="text-gray-500 font-medium animate-pulse">
+              Chargement des avis...
+            </p>
+          </div>
+        ) : avis.length === 0 ? (
+          <div className="text-center py-12 bg-white rounded-2xl border border-gray-200">
+            <p className="text-gray-500 italic">
+              Aucun avis n'a encore été publié. Soyez le premier !
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {avis.map((item) => {
+              const currentId = item.id || item._id;
+              const isEditing = editingId === currentId;
 
-      return (
-        <div
-          key={currentId}
-          className="rounded-2xl bg-white p-6 shadow-md shadow-gray-200/50 border border-gray-100 flex flex-col justify-between hover:shadow-xl hover:border-gray-200 transition-all duration-200"
-        >
-          {isEditing ? (
-            <div className="space-y-3">
-              <span className="font-semibold text-purple-800 text-sm block">
-                Modifier votre avis
-              </span>
-              <select
-                value={editRating}
-                onChange={(e) => setEditRating(Number(e.target.value))}
-                className="w-full rounded-lg border border-gray-300 px-3 py-1.5 text-gray-900 text-sm outline-none focus:border-purple-600"
-              >
-                <option value={5}>5/5</option>
-                <option value={4}>4/5</option>
-                <option value={3}>3/5</option>
-                <option value={2}>2/5</option>
-                <option value={1}>1/5</option>
-              </select>
-              <textarea
-                rows={3}
-                value={editDescription}
-                onChange={(e) => setEditDescription(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-3 py-1.5 text-gray-900 text-sm outline-none focus:border-purple-600"
-              />
-              <div className="flex space-x-2 pt-1">
-                <button
-                  onClick={() => handleUpdate(currentId)}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1 rounded-full text-xs font-semibold transition-colors"
+              return (
+                <div
+                  key={currentId}
+                  className="rounded-2xl bg-white p-6 shadow-md shadow-gray-200/50 border border-gray-100 flex flex-col justify-between hover:shadow-xl hover:border-gray-200 transition-all duration-200"
                 >
-                  Sauvegarder
-                </button>
-                <button
-                  onClick={() => setEditingId(null)}
-                  className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1 rounded-full text-xs font-semibold transition-colors"
-                >
-                  Annuler
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div>
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <span className="font-bold text-gray-900 text-base block line-clamp-1">
-                    {item.name}
-                  </span>
-                </div>
-                <span className="text-amber-400 tracking-wider text-sm flex-shrink-0 mt-0.5">
-                  {"★".repeat(item.rating || 5)}
-                  <span className="text-gray-200">
-                    {"★".repeat(5 - (item.rating || 5))}
-                  </span>
-                </span>
-              </div>
-              <p className="text-gray-600 text-sm leading-relaxed line-clamp-4 italic">
-                "{item.description}"
-              </p>
-            </div>
-          )}
+                  {isEditing ? (
+                    <div className="space-y-3">
+                      <span className="font-semibold text-purple-800 text-sm block">
+                        Modifier votre avis
+                      </span>
+                      <select
+                        value={editRating}
+                        onChange={(e) => setEditRating(Number(e.target.value))}
+                        className="w-full rounded-lg border border-gray-300 px-3 py-1.5 text-gray-900 text-sm outline-none focus:border-purple-600"
+                      >
+                        <option value={5}>5/5</option>
+                        <option value={4}>4/5</option>
+                        <option value={3}>3/5</option>
+                        <option value={2}>2/5</option>
+                        <option value={1}>1/5</option>
+                      </select>
+                      <textarea
+                        rows={3}
+                        value={editDescription}
+                        onChange={(e) => setEditDescription(e.target.value)}
+                        className="w-full rounded-lg border border-gray-300 px-3 py-1.5 text-gray-900 text-sm outline-none focus:border-purple-600"
+                      />
+                      <div className="flex space-x-2 pt-1">
+                        <button
+                          onClick={() => handleUpdate(currentId)}
+                          className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1 rounded-full text-xs font-semibold transition-colors"
+                        >
+                          Sauvegarder
+                        </button>
+                        <button
+                          onClick={() => setEditingId(null)}
+                          className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1 rounded-full text-xs font-semibold transition-colors"
+                        >
+                          Annuler
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                      <div className="flex items-start justify-between mb-4">
+                        <div>
+                          <span className="font-bold text-gray-900 text-base block line-clamp-1">
+                            {item.name}
+                          </span>
+                        </div>
+                        <span className="text-amber-400 tracking-wider text-sm flex-shrink-0 mt-0.5">
+                          {"★".repeat(item.rating || 5)}
+                          <span className="text-gray-200">
+                            {"★".repeat(5 - (item.rating || 5))}
+                          </span>
+                        </span>
+                      </div>
+                      <p className="text-gray-600 text-sm leading-relaxed line-clamp-4 italic">
+                        "{item.description}"
+                      </p>
+                    </div>
+                  )}
 
-          {/* --- BOUTONS MODIFIER / SUPPRIMER (Affichés seulement si c'est l'auteur) --- */}
-          {!isEditing && String(userIdConnecte) === String(item.userId) && (
-            <div className="mt-4 pt-3 flex justify-end space-x-2 border-t border-gray-100">
-              <button
-                onClick={() => startEditing(item)}
-                className="text-xs font-semibold bg-purple-50 text-purple-800 px-3 py-1 rounded-full hover:bg-purple-100 transition-colors"
-              >
-                Modifier
-              </button>
-              <button
-                onClick={() => handleDelete(currentId)}
-                className="text-xs font-semibold bg-red-50 text-red-700 px-3 py-1 rounded-full hover:bg-red-100 transition-colors"
-              >
-                Supprimer
-              </button>
-            </div>
-          )}
-        </div>
-      );
-    })}
-  </div>
-)}
-
-                  {/* Actions de modifications réservées aux auteurs connectés */}
+                  {/* --- BOUTONS MODIFIER / SUPPRIMER --- */}
                   {!isEditing &&
                     userIdConnecte &&
                     userIdConnecte !== "null" &&
@@ -428,7 +396,7 @@ export default function ListeAvisComponent() {
                           Modifier
                         </button>
                         <button
-                          onClick={() => handleDelete(item.id)}
+                          onClick={() => handleDelete(currentId)}
                           className="text-xs font-semibold bg-red-50 text-red-700 px-3 py-1 rounded-full hover:bg-red-100 transition-colors"
                         >
                           Supprimer
